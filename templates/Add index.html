@@ -1,0 +1,111 @@
+
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>One-time file view</title>
+<style>
+body {
+  font: 16px system-ui;
+  max-width: 650px;
+  margin: 8vh auto;
+  padding: 0 20px;
+  color: #18202b;
+}
+main {
+  border: 1px solid #ddd;
+  border-radius: 16px;
+  padding: 28px;
+}
+input, select, button {
+  font: inherit;
+  margin: 10px 0;
+  padding: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+button {
+  background: #18202b;
+  color: white;
+  border: 0;
+  border-radius: 9px;
+  cursor: pointer;
+}
+small { color: #555; }
+#result {
+  overflow-wrap: anywhere;
+  margin-top: 16px;
+}
+</style>
+</head>
+<body>
+<main>
+<h1>One-time file view</h1>
+<p>Ανέβασε ένα αρχείο για προβολή από έναν παραλήπτη, μία φορά.</p>
+
+<form id="form">
+<input type="file" name="file" required>
+
+<label for="ttl">Λήξη link</label>
+<select name="ttl" id="ttl">
+<option value="600">10 λεπτά</option>
+<option value="3600">1 ώρα</option>
+<option value="86400" selected>24 ώρες</option>
+<option value="604800">7 ημέρες</option>
+</select>
+
+<button type="submit">Δημιουργία one-time link</button>
+</form>
+
+<small>Μέγιστο μέγεθος: {{ max_mb }} MB.
+Υποστηρίζονται PDF, PNG, JPEG, GIF, WebP και απλό κείμενο.</small>
+
+<div id="result"></div>
+</main>
+
+<script>
+document.querySelector("#form").addEventListener("submit", async e => {
+  e.preventDefault();
+
+  const out = document.querySelector("#result");
+  out.textContent = "Δημιουργία...";
+
+  try {
+    const r = await fetch("/api/upload", {
+      method: "POST",
+      body: new FormData(e.target)
+    });
+
+    const d = await r.json();
+
+    if (!r.ok) throw new Error(d.error || "Αποτυχία");
+
+    out.innerHTML = "";
+
+    const p = document.createElement("p");
+    p.textContent = "Το link δημιουργήθηκε:";
+
+    const a = document.createElement("a");
+    a.href = d.url;
+    a.textContent = d.url;
+    a.target = "_blank";
+    a.rel = "noreferrer";
+
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = "Αντιγραφή link";
+
+    b.onclick = () =>
+      navigator.clipboard.writeText(d.url)
+        .then(() => b.textContent = "Αντιγράφηκε");
+
+    out.append(p, a, b);
+
+  } catch(err) {
+    out.textContent = err.message;
+  }
+});
+</script>
+</body>
+</html>
