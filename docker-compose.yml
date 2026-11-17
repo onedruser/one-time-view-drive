@@ -1,0 +1,13 @@
+services:
+  one-time-view:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      DATA_DIR: /data
+      MAX_UPLOAD_BYTES: 26214400
+    volumes:
+      - one_time_data:/data
+    restart: unless-stopped
+volumes:
+  one_time_data:
